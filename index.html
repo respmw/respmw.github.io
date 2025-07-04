@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Respiratory muscle weakness calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            max-width: 1200px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            font-weight: 300;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .input-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .results-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 4px solid #764ba2;
+        }
+
+        .measured-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 4px solid #28a745;
+        }
+
+        .zscore-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            border-left: 4px solid #dc3545;
+            margin-top: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1rem;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* Hide spinner arrows */
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        .gender-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 8px;
+        }
+
+        .gender-option {
+            flex: 1;
+            position: relative;
+        }
+
+        .gender-option input[type="radio"] {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        .gender-option label {
+            display: block;
+            padding: 12px 20px;
+            background: #e9ecef;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 0;
+            font-weight: 500;
+        }
+
+        .gender-option input[type="radio"]:checked + label {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .results-grid {
+            display: grid;
+            gap: 20px;
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .result-item {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .result-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-label {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .result-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .result-unit {
+            font-size: 0.9rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .calculate-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .zscore-result {
+            margin-top: 10px;
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .zscore-normal {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .zscore-mild {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .zscore-moderate {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .zscore-severe {
+            background: #f5c6cb;
+            color: #721c24;
+        }
+
+        .formulas-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            margin-top: 30px;
+            border-left: 4px solid #6c757d;
+        }
+
+        .formula-item {
+            margin-bottom: 15px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .formula-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        @media (max-width: 1024px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .gender-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Respiratory muscle weakness calculator</h1>
+
+        <div class="form-grid">
+            <div class="input-section">
+                <h2 class="section-title">Patient Information</h2>
+
+                <div class="form-group">
+                    <label>Gender</label>
+                    <div class="gender-group">
+                        <div class="gender-option">
+                            <input type="radio" id="male" name="gender" value="male">
+                            <label for="male">Man</label>
+                        </div>
+                        <div class="gender-option">
+                            <input type="radio" id="female" name="gender" value="female">
+                            <label for="female">Woman</label>
+                        </div>
+                    </div>
+                    <div class="error-message" id="gender-error">Please select gender</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="age">Age (years)</label>
+                    <input type="number" id="age" min="1" max="120" placeholder="Enter age">
+                    <div class="error-message" id="age-error">Please enter a valid positive age</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="bmi">Body Mass Index (BMI)</label>
+                    <input type="number" id="bmi" min="10" max="50" step="0.1" placeholder="Enter BMI">
+                    <div class="error-message" id="bmi-error">Please enter a valid positive BMI</div>
+                </div>
+
+
+            </div>
+
+            <div class="results-section">
+                <h2 class="section-title">Predicted Values</h2>
+
+                <div class="results-grid">
+                    <div class="result-item">
+                        <div class="result-label">MIP</div>
+                        <div class="result-value" id="mip-value">--</div>
+                        <div class="result-unit">cmH₂O</div>
+                    </div>
+
+                    <div class="result-item">
+                        <div class="result-label">MEP</div>
+                        <div class="result-value" id="mep-value">--</div>
+                        <div class="result-unit">cmH₂O</div>
+                    </div>
+
+                    <div class="result-item">
+                        <div class="result-label">SNIP</div>
+                        <div class="result-value" id="snip-value">--</div>
+                        <div class="result-unit">cmH₂O</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="measured-section">
+                <h2 class="section-title">Actual Values</h2>
+
+                <div class="form-group">
+                    <label for="actual-mip">Actual MIP (cmH₂O)</label>
+                    <input type="number" id="actual-mip" step="0.1" min="0" placeholder="Enter value">
+                </div>
+
+                <div class="form-group">
+                    <label for="actual-mep">Actual MEP (cmH₂O)</label>
+                    <input type="number" id="actual-mep" step="0.1" min="0" placeholder="Enter value">
+                </div>
+
+                <div class="form-group">
+                    <label for="actual-snip">Actual SNIP (cmH₂O)</label>
+                    <input type="number" id="actual-snip" step="0.1" min="0" placeholder="Enter value">
+                </div>
+            </div>
+
+        </div>
+
+        <div class="zscore-section">
+            <h2 class="section-title">Respiratory Muscle Strength</h2>
+
+            <div class="results-grid">
+                <div class="result-item">
+                    <div class="result-label">MIP Z-score</div>
+                    <div class="result-value" id="mip-zscore">--</div>
+                    <div class="result-unit">SD</div>
+                    <div class="zscore-result" id="mip-interpretation">--</div>
+                </div>
+
+                <div class="result-item">
+                    <div class="result-label">MEP Z-score</div>
+                    <div class="result-value" id="mep-zscore">--</div>
+                    <div class="result-unit">SD</div>
+                    <div class="zscore-result" id="mep-interpretation">--</div>
+                </div>
+
+                <div class="result-item">
+                    <div class="result-label">SNIP Z-score</div>
+                    <div class="result-value" id="snip-zscore">--</div>
+                    <div class="result-unit">SD</div>
+                    <div class="zscore-result" id="snip-interpretation">--</div>
+                </div>
+            </div>
+        </div>
+
+                <div class="formulas-section">
+            <h2 class="section-title">Calculation Formulas</h2>
+
+            <div class="formula-item">
+                <div class="formula-title">Predicted values for men:</div>
+                <div>MIP = 137 - 0.57 × age</div>
+                <div>MEP = 179.9 - 0.67 × age</div>
+                <div>SNIP = 63.5 + 0.17 × age + 1.03 × BMI</div>
+            </div>
+
+            <div class="formula-item">
+                <div class="formula-title">Predicted values for women:</div>
+                <div>MIP = 107.3 - 0.4 × age</div>
+                <div>MEP = 127.4 - 0.43 × age</div>
+                <div>SNIP = 23.8 - 0.56 × age + 3.27 × BMI</div>
+            </div>
+
+            <div class="formula-item">
+                <div class="formula-title">Z-score (respiratory muscle strength):</div>
+                <div>z = (Actual value - Predicted value) / Standard deviation</div>
+            </div>
+
+            <div class="formula-item">
+                <div class="formula-title">Standard deviations:</div>
+                <div>Women: SD ≈ 20.62 cmH₂O</div>
+                <div>Men: SD ≈ 30.59 cmH₂O</div>
+            </div>
+
+            <div class="formula-item">
+                <div class="formula-title">Z-score interpretation:</div>
+                <div>z ≥ -1.645 — Normal</div>
+                <div>z from -1.65 to -2.5 — Mild muscle weakness</div>
+                <div>z from -2.51 to -4.0 — Moderate</div>
+                <div>z < -4.1 — Severe</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function calculateResults() {
+            // Clear previous error messages
+            document.querySelectorAll('.error-message').forEach(el => el.style.display = 'none');
+
+            // Get input values
+            const gender = document.querySelector('input[name="gender"]:checked');
+            const age = document.getElementById('age').value;
+            const bmi = document.getElementById('bmi').value;
+
+            let hasError = false;
+
+            // Validate inputs
+            if (!gender) {
+                document.getElementById('gender-error').style.display = 'block';
+                hasError = true;
+            }
+
+            if (!age || age < 1 || age > 120 || parseFloat(age) <= 0) {
+                document.getElementById('age-error').style.display = 'block';
+                hasError = true;
+            }
+
+            if (!bmi || bmi < 10 || bmi > 50 || parseFloat(bmi) <= 0) {
+                document.getElementById('bmi-error').style.display = 'block';
+                hasError = true;
+            }
+
+            if (hasError) {
+                return;
+            }
+
+            // Convert to numbers
+            const ageNum = parseFloat(age);
+            const bmiNum = parseFloat(bmi);
+            const isMale = gender.value === 'male';
+
+            // Calculate predicted values (должные показатели)
+            let predictedMip, predictedMep, predictedSnip;
+
+            if (isMale) {
+                // Formulas for men
+                predictedMip = 137 - 0.57 * ageNum;
+                predictedMep = 179.9 - 0.67 * ageNum;
+                predictedSnip = 63.5 + 0.17 * ageNum + 1.03 * bmiNum;
+            } else {
+                // Formulas for women
+                predictedMip = 107.3 - 0.4 * ageNum;
+                predictedMep = 127.4 - 0.43 * ageNum;
+                predictedSnip = 23.8 - 0.56 * ageNum + 3.27 * bmiNum;
+            }
+
+            // Display predicted results with animation
+            animateResult('mip-value', predictedMip.toFixed(1));
+            animateResult('mep-value', predictedMep.toFixed(1));
+            animateResult('snip-value', predictedSnip.toFixed(1));
+
+            // Calculate Z-scores if actual values are provided
+            calculateZScores(predictedMip, predictedMep, predictedSnip, isMale);
+        }
+
+        function calculateZScores(predictedMip, predictedMep, predictedSnip, isMale) {
+            // Get actual values
+            const actualMip = document.getElementById('actual-mip').value;
+            const actualMep = document.getElementById('actual-mep').value;
+            const actualSnip = document.getElementById('actual-snip').value;
+
+            // Standard deviations
+            const sd = isMale ? 30.59 : 20.62;
+
+            // Calculate and display Z-scores
+            if (actualMip) {
+                const mipZScore = (parseFloat(actualMip) - predictedMip) / sd;
+                animateResult('mip-zscore', mipZScore.toFixed(2));
+                updateInterpretation('mip-interpretation', mipZScore);
+            } else {
+                document.getElementById('mip-zscore').textContent = '--';
+                document.getElementById('mip-interpretation').textContent = '--';
+                document.getElementById('mip-interpretation').className = 'zscore-result';
+            }
+
+            if (actualMep) {
+                const mepZScore = (parseFloat(actualMep) - predictedMep) / sd;
+                animateResult('mep-zscore', mepZScore.toFixed(2));
+                updateInterpretation('mep-interpretation', mepZScore);
+            } else {
+                document.getElementById('mep-zscore').textContent = '--';
+                document.getElementById('mep-interpretation').textContent = '--';
+                document.getElementById('mep-interpretation').className = 'zscore-result';
+            }
+
+            if (actualSnip) {
+                const snipZScore = (parseFloat(actualSnip) - predictedSnip) / sd;
+                animateResult('snip-zscore', snipZScore.toFixed(2));
+                updateInterpretation('snip-interpretation', snipZScore);
+            } else {
+                document.getElementById('snip-zscore').textContent = '--';
+                document.getElementById('snip-interpretation').textContent = '--';
+                document.getElementById('snip-interpretation').className = 'zscore-result';
+            }
+        }
+
+                function updateInterpretation(elementId, zScore) {
+            const element = document.getElementById(elementId);
+
+            if (zScore >= -1.645) {
+                element.textContent = 'Normal';
+                element.className = 'zscore-result zscore-normal';
+            } else if (zScore >= -2.5) {
+                element.textContent = 'Mild muscle weakness';
+                element.className = 'zscore-result zscore-mild';
+            } else if (zScore >= -4.0) {
+                element.textContent = 'Moderate';
+                element.className = 'zscore-result zscore-moderate';
+            } else {
+                element.textContent = 'Severe';
+                element.className = 'zscore-result zscore-severe';
+            }
+        }
+
+        function animateResult(elementId, value) {
+            const element = document.getElementById(elementId);
+            element.style.transform = 'scale(0.8)';
+            element.style.opacity = '0.5';
+
+            setTimeout(() => {
+                element.textContent = value;
+                element.style.transform = 'scale(1)';
+                element.style.opacity = '1';
+                element.style.transition = 'all 0.3s ease';
+            }, 150);
+        }
+
+                // Function to validate positive numbers
+        function validatePositiveNumber(input) {
+            const value = parseFloat(input.value);
+            if (input.value && (isNaN(value) || value < 0)) {
+                input.value = '';
+            }
+        }
+
+                // Auto-calculate on input change
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', () => {
+                // Validate positive numbers for all numeric inputs
+                if (input.type === 'number') {
+                    validatePositiveNumber(input);
+                }
+
+                // Auto-calculate when basic inputs change
+                if (input.id === 'age' || input.id === 'bmi' || input.name === 'gender') {
+                    calculateResults();
+                }
+
+                // Recalculate Z-scores when actual values change
+                if (input.id.startsWith('actual-')) {
+                    const predicted = {
+                        mip: parseFloat(document.getElementById('mip-value').textContent),
+                        mep: parseFloat(document.getElementById('mep-value').textContent),
+                        snip: parseFloat(document.getElementById('snip-value').textContent)
+                    };
+
+                    if (!isNaN(predicted.mip)) {
+                        const gender = document.querySelector('input[name="gender"]:checked');
+                        if (gender) {
+                            calculateZScores(predicted.mip, predicted.mep, predicted.snip, gender.value === 'male');
+                        }
+                    }
+                }
+            });
+        });
+    </script>
+</body>
+</html>
